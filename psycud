@@ -1,0 +1,130 @@
+# Import the modules
+import finance_dl
+import sqlite3
+import tkinter as tk
+from tkinter import messagebox
+
+# Create a database connection and a cursor
+conn = sqlite3.connect("budget.db")
+c = conn.cursor()
+
+# Create a table for storing user information
+c.execute("""CREATE TABLE IF NOT EXISTS users (
+    name TEXT,
+    email TEXT
+)""")
+
+# Create a table for storing budget and savings goal information
+c.execute("""CREATE TABLE IF NOT EXISTS budget (
+    month TEXT,
+    budget REAL,
+    savings REAL
+)""")
+
+# Create a table for storing expense information
+c.execute("""CREATE TABLE IF NOT EXISTS expenses (
+    month TEXT,
+    category TEXT,
+    amount REAL
+)""")
+
+# Commit the changes and close the connection
+conn.commit()
+conn.close()
+
+# Define some global variables
+user_name = ""
+user_email = ""
+current_month = "January" # You can change this to get the current month from the system date
+
+# Define some helper functions
+def get_user_info():
+    # Get the user name and email from the entry fields
+    global user_name, user_email
+    user_name = name_entry.get()
+    user_email = email_entry.get()
+
+    # Check if the user name and email are valid
+    if user_name == "" or user_email == "":
+        messagebox.showerror("Error", "Please enter your name and email.")
+        return
+
+    # Insert the user information into the database
+    conn = sqlite3.connect("budget.db")
+    c = conn.cursor()
+    c.execute("INSERT INTO users VALUES (?, ?)", (user_name, user_email))
+    conn.commit()
+    conn.close()
+
+    # Clear the entry fields and disable them
+    name_entry.delete(0, tk.END)
+    email_entry.delete(0, tk.END)
+    name_entry.config(state="disabled")
+    email_entry.config(state="disabled")
+
+    # Enable the next button and show a success message
+    next_button1.config(state="normal")
+    messagebox.showinfo("Success", "Your information has been saved.")
+
+def get_budget_info():
+    # Get the budget and savings goal from the entry fields
+    global current_month
+    budget = budget_entry.get()
+    savings = savings_entry.get()
+
+    # Check if the budget and savings goal are valid numbers
+    try:
+        budget = float(budget)
+        savings = float(savings)
+        if budget <= 0 or savings <= 0:
+            raise ValueError
+    except ValueError:
+        messagebox.showerror("Error", "Please enter positive numbers for your budget and savings goal.")
+        return
+
+    # Insert the budget and savings goal information into the database
+    conn = sqlite3.connect("budget.db")
+    c = conn.cursor()
+    c.execute("INSERT INTO budget VALUES (?, ?, ?)", (current_month, budget, savings))
+    conn.commit()
+    conn.close()
+
+    # Clear the entry fields and disable them
+    budget_entry.delete(0, tk.END)
+    savings_entry.delete(0, tk.END)
+    budget_entry.config(state="disabled")
+    savings_entry.config(state="disabled")
+
+    # Enable the next button and show a success message
+    next_button2.config(state="normal")
+    messagebox.showinfo("Success", "Your budget and savings goal have been saved.")
+
+def get_expense_info():
+    # Get the expense category and amount from the entry fields
+    global current_month
+    category = category_entry.get()
+    amount = amount_entry.get()
+
+     # Check if the expense category and amount are valid
+     if category == "" or amount == "":
+         messagebox.showerror("Error", "Please enter an expense category and amount.")
+         return
+
+     try:
+         amount = float(amount)
+         if amount <= 0:
+             raise ValueError
+     except ValueError:
+         messagebox.showerror("Error", "Please enter a positive number for your expense amount.")
+         return
+
+     # Insert the expense information into the database
+     conn = sqlite3.connect("budget.db")
+     c = conn.cursor()
+     c.execute("INSERT INTO expenses VALUES (?, ?, ?)", (current_month, category, amount))
+     conn.commit()
+     conn.close()
+
+     # Clear the entry fields 
+     category_entry.delete(0, tk.END)
+     amount_entry.delete(0, tk.END)
